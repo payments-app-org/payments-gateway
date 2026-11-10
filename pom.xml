@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Spring Boot 4.0, а не 4.1, как у остальных сервисов: Spring Cloud выпускается под конкретную ветку Boot,
+         последняя стабильная (2025.1) — под 4.0. Перейдём на 4.1 вместе с Spring Cloud 2026.0 -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.0.9</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.paymentsapp</groupId>
+    <artifactId>gateway</artifactId>
+    <version>0.1.0</version>
+    <name>gateway</name>
+    <description>API Gateway: единственный вход в API сервисов</description>
+
+    <properties>
+        <java.version>21</java.version>
+        <spring-cloud.version>2025.1.4</spring-cloud.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- Spring Cloud Gateway на WebFlux (Netty): маршруты, фильтры, тайм-ауты. Библиотека payments-platform
+             не нужна: она для сервисов на Spring MVC с базой и Kafka, у gateway их нет -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-gateway-server-webflux</artifactId>
+        </dependency>
+        <!-- /actuator/health: пробы liveness и readiness (healthcheck в compose, Kubernetes) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

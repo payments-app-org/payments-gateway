@@ -1,0 +1,48 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          httpclient:
+            # Соединиться с сервисом — 1 с; ответ — 30 с: дольше ждать платёж бессмысленно, фронтенд и так
+            # получает 202 и опрашивает статус
+            connect-timeout: 1000
+            response-timeout: 30s
+          # Наружу — только публичный API. /api/internal/** (резервы, зачисления, итоги процессинга) сюда
+          # не попадает: ни один маршрут его не описывает — 404
+          routes:
+            - id: account
+              uri: ${ACCOUNT_URL:http://localhost:8081}
+              predicates: [Path=/api/users/**]
+            - id: pricing
+              uri: ${PRICING_URL:http://localhost:8082}
+              predicates: [Path=/api/pricing/**]
+            - id: payment
+              uri: ${PAYMENT_URL:http://localhost:8083}
+              predicates: [Path=/api/payments/**]
+            - id: history
+              uri: ${HISTORY_URL:http://localhost:8086}
+              predicates: [Path=/api/history/**]
+            - id: biller
+              uri: ${BILLER_URL:http://localhost:8087}
+              predicates: [Path=/api/biller/**]
+            - id: autopayments
+              uri: ${AUTOPAYMENTS_URL:http://localhost:8089}
+              predicates: [Path=/api/autopayments/**]
+
+# Actuator: /actuator/health — liveness (процесс жив) и readiness (готов принимать запросы);
+# по ним healthcheck в compose и пробы Kubernetes. Остановка плавная (по умолчанию в Spring Boot)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
