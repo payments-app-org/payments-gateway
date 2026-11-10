@@ -41,7 +41,13 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        # prometheus — метрики для Prometheus (/actuator/prometheus); куда отправлять трассы и формат логов
+        # задаёт окружение (в Kubernetes — payments-deploy/envs/<окружение>/env.yaml)
+        include: health,info,prometheus
+  # Метка application на всех метриках — по ней графики Grafana выбирают сервис (у сервисов её ставит payments-platform)
+  metrics:
+    tags:
+      application: ${spring.application.name}
   endpoint:
     health:
       probes:
