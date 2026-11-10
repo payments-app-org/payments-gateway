@@ -2,7 +2,7 @@
 # Сборка из корня репозитория. Тесты здесь не запускаем: их уже прогнал CI.
 # Стадия сборки — на архитектуре машины сборки (BUILDPLATFORM): jar одинаковый для amd64 и arm64,
 # Maven не работает под эмуляцией. Под каждую архитектуру собирается только финальный слой
-FROM --platform=$BUILDPLATFORM maven:3.9-eclipse-temurin-21 AS build
+FROM --platform=$BUILDPLATFORM maven:3.9-eclipse-temurin-26 AS build
 WORKDIR /src
 COPY pom.xml pom.xml
 RUN --mount=type=cache,target=/root/.m2 mvn -q -B dependency:go-offline
