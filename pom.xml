@@ -15,7 +15,7 @@
 
     <groupId>com.paymentsapp</groupId>
     <artifactId>gateway</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
     <name>gateway</name>
     <description>API Gateway: единственный вход в API сервисов</description>
 
@@ -68,9 +68,26 @@
             <artifactId>opentelemetry-exporter-otlp</artifactId>
         </dependency>
 
+        <!-- Проверка access-токенов Keycloak (JWT): подпись по ключам Keycloak, срок, издатель, aud -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
+        </dependency>
+        <!-- Ограничение частоты запросов (RequestRateLimiter): счётчики пользователей — в Redis, общие для всех подов -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- mockJwt(): запрос с готовым токеном в тестах, без Keycloak -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -5,8 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * API Gateway — единственный вход в API сервисов: снаружи доступен только он, сервисы — внутри кластера.
- * Маршруты «путь → сервис» и тайм-ауты — в application.yml. Сейчас gateway только разводит запросы;
- * проверка токена (Keycloak) и ограничение частоты запросов появятся здесь же.
+ * Маршруты «путь → сервис», тайм-ауты и лимиты — в application.yml; проверка токена Keycloak, пользователь
+ * из токена и ограничение частоты запросов — пакет security.
  */
 @SpringBootApplication
 public class GatewayApplication {
