@@ -4,6 +4,24 @@ server:
 spring:
   application:
     name: gateway
+  # Проверка access-токенов Keycloak (security/SecurityConfig). Ключи подписи берём по внутреннему адресу Keycloak
+  # (jwk-set-uri), а издателя (iss) сверяем с публичным — тем, что видит браузер и что Keycloak пишет в токен.
+  # Оба адреса задаёт окружение; по умолчанию — compose (Keycloak за прокси Vite на localhost:5173/auth)
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER_URI:http://localhost:5173/auth/realms/payments}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8180/auth/realms/payments/protocol/openid-connect/certs}
+          # Токен должен быть выпущен для нашего API (aud), а не для другого приложения того же Keycloak
+          audiences: [payments-api]
+  # Redis — счётчики ограничения частоты запросов
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: 6379
+      connect-timeout: 1s
+      timeout: 1s
   cloud:
     gateway:
       server:
@@ -13,12 +31,28 @@ spring:
             # получает 202 и опрашивает статус
             connect-timeout: 1000
             response-timeout: 30s
+          # Для всех маршрутов: не больше 20 запросов в секунду на пользователя, кратко — до 40 (security/RateLimitConfig).
+          # Фронтенд при вводе суммы шлёт расчёт комиссии раз в 0,5 с — запас большой
+          default-filters:
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
           # Наружу — только публичный API. /api/internal/** (резервы, зачисления, итоги процессинга) сюда
           # не попадает: ни один маршрут его не описывает — 404
           routes:
             - id: account
               uri: ${ACCOUNT_URL:http://localhost:8081}
               predicates: [Path=/api/users/**]
+            # Расчёт комиссии и курса: пользователь — в теле JSON. Фильтр UserIdInBody сверяет его с токеном
+            # (security/UserIdInBodyGatewayFilterFactory). Стоит раньше общего маршрута pricing: выбирается первый совпавший
+            - id: pricing-quotes
+              uri: ${PRICING_URL:http://localhost:8082}
+              predicates:
+                - Path=/api/pricing/commission,/api/pricing/fx-quote
+                - Method=POST
+              filters: [UserIdInBody]
             - id: pricing
               uri: ${PRICING_URL:http://localhost:8082}
               predicates: [Path=/api/pricing/**]
